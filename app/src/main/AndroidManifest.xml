@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.likesdogscam.cam.soundboardbase">
+          android:grantUriPermissions="true"
+          package="com.likesdogscam.cam.soundboardbase">
     <uses-library android:name="com.android.support:recyclerview-v7" android:required="true"/>
     <uses-library android:name="au.com.bytecode.opencsv" android:required="true"/>
 </manifest>

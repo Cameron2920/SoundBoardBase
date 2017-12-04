@@ -1,15 +1,22 @@
 package com.likesdogscam.cam.soundboardbase.activities;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.net.Uri;
 import android.os.Build;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
+import com.likesdogscam.cam.soundboardbase.R;
 import com.likesdogscam.cam.soundboardbase.adapters.SoundClipAdapter;
 import com.likesdogscam.cam.soundboardbase.cells.SoundClipCell;
 import com.likesdogscam.cam.soundboardbase.helpers.SoundClipHelper;
@@ -24,6 +31,8 @@ import static com.likesdogscam.cam.soundboardbase.adapters.SoundClipAdapter.DEFA
 
 public class SoundboardActivity extends AppCompatActivity implements SoundClipCell.Delegate{
     private static String TAG = "SoundboardActivity";
+    private static String SOUND_CLIP_MIME_TYPE = "audio/*";
+    private static String ASSET_CONTENT_PROVIDER_BASE = "com.likesdogscam.cam.soundboardbase";
     private static int MAX_AUDIO_STREAMS = 20;
 
     private String soundClipDirectory;
@@ -65,7 +74,7 @@ public class SoundboardActivity extends AppCompatActivity implements SoundClipCe
         loadSoundClips();
 
         if(soundClips != null) {
-            soundClipRecyclerView.setAdapter(new SoundClipAdapter(soundClips, this, soundClipCellId));
+            soundClipRecyclerView.setAdapter(new SoundClipAdapter(soundClips, this, soundClipCellId, this));
         }
         else {
             Log.e(TAG, "sound clips is null");
@@ -87,7 +96,7 @@ public class SoundboardActivity extends AppCompatActivity implements SoundClipCe
     }
 
     @Override
-    public void onPlaySoundClipButton(SoundClip soundClip) {
+    public void onSingleTap(SoundClip soundClip) {
         if(soundClip.getSampleId() != -1) {
             if (soundClip.isSampleLoaded()) {
                 soundPool.play(soundClip.getSampleId(), 1, 1, 0, 0, 1);
@@ -103,6 +112,11 @@ public class SoundboardActivity extends AppCompatActivity implements SoundClipCe
                 Log.e(TAG, "unable to load sound clip", e);
             }
         }
+    }
+
+    @Override
+    public void onLongPress(SoundClip soundClip) {
+        openShareOptions(soundClip);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -129,5 +143,15 @@ public class SoundboardActivity extends AppCompatActivity implements SoundClipCe
         catch (IOException e){
             Log.e(TAG, "unable to load soundclips", e);
         }
+    }
+
+    private void openShareOptions(SoundClip soundClip){
+        Uri soundClipUri = Uri.parse("content://" + ASSET_CONTENT_PROVIDER_BASE + "/" + soundClip.getFilename());
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType(SOUND_CLIP_MIME_TYPE);
+        sharingIntent.putExtra(Intent.EXTRA_STREAM, soundClipUri);
+        sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        sharingIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        startActivity(Intent.createChooser(sharingIntent, "Share via"));
     }
 }
